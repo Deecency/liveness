@@ -15,11 +15,25 @@ uploaded.
 
 ## Using it
 
-The package sits beside the apps in `AndroidStudioProjects/`. Add it by
-path:
+The package is a private GitHub repo, `Deecency/liveness`. Add it at a
+tagged version:
 
 ```yaml
 dependencies:
+  liveness:
+    git:
+      url: https://github.com/Deecency/liveness.git
+      ref: v1.0.0
+```
+
+Fetching it needs git access to the repo (the machine's GitHub sign-in).
+An app moves to a newer version only when its `ref` changes.
+
+To try unreleased changes from a local copy beside the app, add a
+`pubspec_overrides.yaml` to the app, and keep it out of git:
+
+```yaml
+dependency_overrides:
   liveness:
     path: ../liveness
 ```
@@ -50,9 +64,10 @@ listed, but its model file isn't bundled: choosing it fails until
 
 ## Changing it
 
-This package is shared, so a change reaches every app that uses it the
-next time that app builds. Keep its API backward compatible, or update
-every app in the same change.
+This package is shared. To release a change: commit it, tag a new
+version (`git tag -a v1.1.0 -m "..." && git push origin v1.1.0`), then
+bump `ref` in each app that should get it. Keep the API backward
+compatible, so apps can move up one at a time.
 
 ## Origin and licence
 
