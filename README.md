@@ -38,9 +38,78 @@ dependency_overrides:
     path: ../liveness
 ```
 
-The app needs camera permission: `NSCameraUsageDescription` in
-`ios/Runner/Info.plist`, and `android.permission.CAMERA` in
+## App setup (required — release builds break without it)
+
+Both bugs below show only in release builds; debug and `flutter run`
+work, which is how they slipped through in Solace. They're fixed in each
+app's own project files, not in this package.
+
+**Both platforms:** camera permission — `NSCameraUsageDescription` in
+`ios/Runner/Info.plist`, `android.permission.CAMERA` in
 `android/app/src/main/AndroidManifest.xml`.
+
+**iOS**
+
+- Minimum iOS 15.5 (ML Kit): `platform :ios, '15.5'` in `ios/Podfile`
+  and `IPHONEOS_DEPLOYMENT_TARGET = 15.5` in the Runner project.
+- Release stripping removes `TfLiteModelCreate` (tflite_flutter looks it
+  up at runtime with `dlsym`, so nothing references it), and the face
+  match fails with "Failed to lookup symbol 'TfLiteModelCreate'". At the
+  end of `post_install` in `ios/Podfile`:
+
+  ```ruby
+  runner_project = Xcodeproj::Project.open(
+    File.join(File.dirname(File.realpath(__FILE__)), 'Runner.xcodeproj'),
+  )
+  runner_project.targets.each do |target|
+    next unless target.name == 'Runner'
+    target.build_configurations.each do |config|
+      next unless %w[Release Profile].include?(config.name)
+      config.build_settings['DEAD_CODE_STRIPPING'] = 'NO'
+      config.build_settings['STRIP_STYLE'] = 'non-global'
+      config.build_settings['STRIP_INSTALLED_PRODUCT'] = 'NO'
+    end
+  end
+  runner_project.save
+  ```
+
+  Check the archived binary:
+  `nm -gU build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app/Runner | grep TfLiteModelCreate`
+  must print a `T _TfLiteModelCreate` line.
+- Simulator: ML Kit has no arm64 simulator slice. In the `post_install`
+  pods loop: `config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'`.
+
+**Android** (`android/app/build.gradle.kts`, inside `android { }`)
+
+```kotlin
+packaging {
+    jniLibs {
+        pickFirsts.add("**/libc++_shared.so") // camera and tflite both ship it
+        useLegacyPackaging = true
+    }
+}
+androidResources {
+    noCompress += listOf("tflite", "emd", "tfl", "pb") // models stay uncompressed
+}
+buildTypes {
+    release {
+        isMinifyEnabled = false // R8 needs ML Kit/tflite keep rules first
+        isShrinkResources = false
+    }
+}
+```
+
+And in the main `<activity>` of `AndroidManifest.xml` (Impeller has
+camera-preview texture problems on some devices):
+
+```xml
+<meta-data
+    android:name="io.flutter.embedding.android.EnableImpeller"
+    android:value="false" />
+```
+
+Test a release build on a real Android phone and an archived build on a
+real iPhone, through the face match, not just the camera opening.
 
 ```dart
 import 'package:liveness/liveness.dart';
