@@ -1,4 +1,4 @@
-part of 'face_liveness.dart';
+part of 'liveness_controller.dart';
 
 // Maps a reported device orientation to the rotation compensation (in
 // degrees) needed on Android to turn camera-stream bytes upright for ML
@@ -13,13 +13,17 @@ const Map<DeviceOrientation, int> _orientations = <DeviceOrientation, int>{
 /// Camera-frame plumbing: turning each [CameraImage] into an ML Kit
 /// [InputImage], dispatching detection results, and cheap per-frame image
 /// stats (upright frame size, brightness) the final-capture grading needs.
-extension _CameraInput on _FaceLivenessState {
+extension _CameraInput on LivenessController {
   /// Called on (roughly) every camera frame. Runs ML Kit face detection
   /// directly against the in-memory frame — no still-image capture, no
   /// per-frame file I/O — and drops frames that arrive while a previous one
   /// is still being processed instead of queuing them up.
   void _onCameraImage(CameraImage image) {
-    if (!mounted || _isDetecting || _isProcessing || _isWaitingToStart) {
+    if (_disposed ||
+        _finished ||
+        _isDetecting ||
+        _isProcessing ||
+        _isWaitingToStart) {
       return;
     }
 
@@ -44,9 +48,15 @@ extension _CameraInput on _FaceLivenessState {
     _faceDetector
         .processImage(inputImage)
         .then((faces) {
-          if (!mounted) return;
+          if (_disposed || _finished) return;
+          if (faces.length != _faceCount) {
+            _update(() => _faceCount = faces.length);
+          }
+          final crowded = config.rejectMultipleFaces && faces.length > 1;
           if (_isInFinalCapture) {
-            if (faces.isEmpty) {
+            if (crowded) {
+              _multipleFacesDuringCapture();
+            } else if (faces.isEmpty) {
               _noFaceDuringCapture();
             } else {
               _evaluateFinalCapture(
@@ -55,6 +65,9 @@ extension _CameraInput on _FaceLivenessState {
                 _estimateBrightness(image),
               );
             }
+          } else if (crowded) {
+            // Someone else is in the frame: no gesture counts until they
+            // leave it.
           } else if (faces.isNotEmpty) {
             _processFaceData(faces.first);
           } else {

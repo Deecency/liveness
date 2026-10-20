@@ -6,6 +6,9 @@ Solace's identity check, and available to any app in this workspace.
 - **`FaceLiveness.show`** opens a full-screen camera flow. It asks for
   random gestures (blink, smile, turn left or right, open mouth, shake
   head) and returns a `LivenessResult` with the frames it captured.
+- **`LivenessController`** + **`LivenessPreview`** are the same check
+  without the screen, for an app that draws its own (see "Your own
+  screen" below).
 - **`FaceCompare`** turns faces into embeddings with a TFLite model and
   scores how alike two faces are: `compare`, `compareBest` (a reference
   photo against several live frames), `compareDetailed`, `isSamePerson`.
@@ -123,6 +126,47 @@ if (result?.status == LivenessResultStatus.success) {
   // Score result's frames against a reference photo.
 }
 ```
+
+## Your own screen
+
+`FaceLiveness.show` draws the package's own screen. To draw your own,
+drive a `LivenessController` and rebuild from its state:
+
+```dart
+final controller = LivenessController(
+  config: const LivenessConfig(
+    requiredGestures: [LivenessGesture.turnLeft, LivenessGesture.smile],
+    rejectMultipleFaces: true,
+  ),
+);
+controller.initialize(); // opens the camera; failures show in state.error
+controller.start();      // countdown, a 2 s "get ready", then the gestures
+
+// In build():
+Stack(children: [
+  LivenessPreview(controller: controller), // camera only, cover-cropped
+  ValueListenableBuilder<LivenessState>(
+    valueListenable: controller,
+    builder: (context, state, _) => YourOverlay(state),
+  ),
+]);
+
+final result = await controller.result; // same LivenessResult as show()
+controller.dispose();
+```
+
+`LivenessState` has `phase` (`preparing`, `gesture`, `finalCapture`,
+`completing`, `finished`), `cameraReady`, `gestures` (the order chosen for
+this session), `currentIndex`, `currentGesture`, `completed`, `hint`
+(during `finalCapture`: what to fix, null when the frame is good),
+`faceCount`, `timeRemaining`/`timeoutSeconds`, `error` and `result`. Map
+the enums to your own wording; the package's English is only used by its
+own screen. `cancel()` ends the session; disposing an unfinished one
+completes `result` as cancelled.
+
+With `rejectMultipleFaces: true`, a frame with more than one face counts
+for nothing and the hint becomes `LivenessCaptureHint.multipleFaces`. It's
+off by default, which keeps the original behaviour.
 
 ## Models
 

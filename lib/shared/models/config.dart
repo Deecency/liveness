@@ -31,6 +31,12 @@ class LivenessConfig {
   /// auto-adjust enabled.
   final LivenessThresholds thresholds;
 
+  /// When true, a frame with more than one face counts for nothing: no
+  /// gesture progress, no final photo, and the capture hint becomes
+  /// [LivenessCaptureHint.multipleFaces]. Off by default, which keeps the
+  /// original behaviour (the first face found is used).
+  final bool rejectMultipleFaces;
+
   const LivenessConfig({
     this.title = 'Liveness Verification',
     this.timeoutSeconds = 30,
@@ -47,5 +53,6 @@ class LivenessConfig {
     this.showTimer = true,
     this.theme = const LivenessTheme(),
     this.thresholds = const LivenessThresholds(),
+    this.rejectMultipleFaces = false,
   });
 }

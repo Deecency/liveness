@@ -4,7 +4,17 @@ import 'package:flutter/material.dart';
 enum LivenessResultStatus { success, failed, timeout, cancelled }
 
 /// Enum for different liveness gestures
-enum LivenessGesture { blink, mouthOpen, headShake, smile, turnLeft, turnRight }
+enum LivenessGesture {
+  blink,
+  mouthOpen,
+  headShake,
+  smile,
+  turnLeft,
+  turnRight,
+
+  /// Head down then up (or up then down), like a nod.
+  nod,
+}
 
 /// What (if anything) the user needs to change during the final "hold still"
 /// capture step for the frame to be usable by the downstream face match.
@@ -20,6 +30,10 @@ enum LivenessCaptureHint {
   tooDark,
   tooBright,
   holdStill,
+
+  /// More than one face is in the frame. Raised only when
+  /// `LivenessConfig.rejectMultipleFaces` is on.
+  multipleFaces,
 }
 
 /// User-facing copy for each capture hint.
@@ -44,6 +58,8 @@ extension LivenessCaptureHintExtension on LivenessCaptureHint {
         return 'Too Bright';
       case LivenessCaptureHint.holdStill:
         return 'Hold Still';
+      case LivenessCaptureHint.multipleFaces:
+        return 'One Face Only';
     }
   }
 
@@ -67,6 +83,8 @@ extension LivenessCaptureHintExtension on LivenessCaptureHint {
         return 'Move away from strong direct light';
       case LivenessCaptureHint.holdStill:
         return 'Hold still and look directly at the camera';
+      case LivenessCaptureHint.multipleFaces:
+        return 'Make sure only your face is in the frame';
     }
   }
 }
@@ -87,6 +105,8 @@ extension LivenessGestureExtension on LivenessGesture {
         return 'Turn Left';
       case LivenessGesture.turnRight:
         return 'Turn Right';
+      case LivenessGesture.nod:
+        return 'Nod';
     }
   }
 
@@ -104,6 +124,8 @@ extension LivenessGestureExtension on LivenessGesture {
         return 'Turn your head to the left and hold';
       case LivenessGesture.turnRight:
         return 'Turn your head to the right and hold';
+      case LivenessGesture.nod:
+        return 'Slowly nod your head down and up';
     }
   }
 
@@ -121,6 +143,8 @@ extension LivenessGestureExtension on LivenessGesture {
         return Icons.keyboard_arrow_left;
       case LivenessGesture.turnRight:
         return Icons.keyboard_arrow_right;
+      case LivenessGesture.nod:
+        return Icons.swap_vert;
     }
   }
 }

@@ -1,4 +1,4 @@
-part of 'face_liveness.dart';
+part of 'liveness_controller.dart';
 
 // --- Adaptive thresholds ---------------------------------------------------
 
@@ -101,6 +101,7 @@ class _ResolvedThresholds {
       mouthOpenFrames = c.mouthOpenFrameCount ?? (Platform.isIOS ? 6 : 4),
       smileFrames = c.smileFrameCount ?? 16,
       headShakeReversals = c.headShakeReversals ?? (Platform.isIOS ? 2 : 1),
+      nodReversals = c.nodReversals ?? 1,
       captureYaw = c.captureYawDegrees ?? 5.0,
       capturePitch = c.capturePitchDegrees ?? 8.0,
       captureRoll = c.captureRollDegrees ?? 8.0,
@@ -150,6 +151,14 @@ class _ResolvedThresholds {
         tolerance: c.autoAdjustTolerance,
         triggerFraction: c.autoAdjustTriggerFraction,
       ),
+      nodAngle = _AdaptiveThreshold(
+        name: 'nodAngle',
+        defaultValue: c.nodAngle ?? 10.0,
+        passWhenBelow: false,
+        autoAdjust: c.autoAdjust,
+        tolerance: c.autoAdjustTolerance,
+        triggerFraction: c.autoAdjustTriggerFraction,
+      ),
       turnAngle = _AdaptiveThreshold(
         name: 'turnAngle',
         defaultValue: c.turnAngle ?? 15.0,
@@ -163,6 +172,7 @@ class _ResolvedThresholds {
   final int mouthOpenFrames;
   final int smileFrames;
   final int headShakeReversals;
+  final int nodReversals;
   final double captureYaw;
   final double capturePitch;
   final double captureRoll;
@@ -178,12 +188,13 @@ class _ResolvedThresholds {
   final _AdaptiveThreshold mouthRatio;
   final _AdaptiveThreshold smileProb;
   final _AdaptiveThreshold headShakeAngle;
+  final _AdaptiveThreshold nodAngle;
   final _AdaptiveThreshold turnAngle;
 }
 
 /// Per-step tracking of how close the user is getting, and the runtime
 /// nudging of the gesture thresholds toward a struggling user.
-extension _Adaptation on _FaceLivenessState {
+extension _Adaptation on LivenessController {
   /// Called when a step begins (first step, or after each completed gesture).
   /// Resets the per-step adaptation bookkeeping.
   void _beginStepTracking() {
@@ -240,6 +251,7 @@ extension _Adaptation on _FaceLivenessState {
     LivenessGesture.mouthOpen => _thr.mouthRatio,
     LivenessGesture.smile => _thr.smileProb,
     LivenessGesture.headShake => _thr.headShakeAngle,
+    LivenessGesture.nod => _thr.nodAngle,
     LivenessGesture.turnLeft || LivenessGesture.turnRight => _thr.turnAngle,
   };
 

@@ -1,15 +1,15 @@
-part of 'face_liveness.dart';
+part of 'liveness_controller.dart';
 
 /// The gesture phase: choosing the challenge, the per-gesture recognisers,
 /// and advancing from one step to the next (and finally into capture).
-extension _GestureRecognition on _FaceLivenessState {
+extension _GestureRecognition on LivenessController {
   /// Resolves the gesture sequence for this session. With
   /// [LivenessConfig.randomGestureCount] set, shuffles a de-duplicated copy of
   /// the pool and takes that many; otherwise returns the configured list
   /// as-is.
   List<LivenessGesture> _resolveGestures() {
-    final pool = widget.config.requiredGestures;
-    final count = widget.config.randomGestureCount;
+    final pool = config.requiredGestures;
+    final count = config.randomGestureCount;
     if (count == null || pool.isEmpty) return pool;
 
     final unique = pool.toSet().toList()..shuffle(math.Random());
@@ -41,6 +41,9 @@ extension _GestureRecognition on _FaceLivenessState {
         break;
       case LivenessGesture.turnRight:
         _detectTurnRight(face);
+        break;
+      case LivenessGesture.nod:
+        _detectNod(face);
         break;
     }
   }
@@ -167,6 +170,36 @@ extension _GestureRecognition on _FaceLivenessState {
     }
   }
 
+  /// A nod: the head pitched clearly one way, then clearly the other
+  /// (`nodReversals` direction changes, default 1 ⇒ down-then-up or
+  /// up-then-down). Like the head shake, movement in two directions is what
+  /// a held-still photo can't fake.
+  void _detectNod(Face face) {
+    final pitch = face.headEulerAngleX;
+    if (pitch == null) return;
+
+    _trackApproach(_thr.nodAngle, pitch.abs());
+    final threshold = _thr.nodAngle.value;
+    var direction = 0; // -1 down, 0 level, 1 up
+    if (pitch > threshold) {
+      direction = 1;
+    } else if (pitch < -threshold) {
+      direction = -1;
+    }
+
+    if (direction != 0 && direction != _nodDirection) {
+      if (_nodDirection != 0) {
+        _nodReversals++;
+      }
+      _nodDirection = direction;
+    }
+
+    if (_nodReversals >= _thr.nodReversals && !_nodDetected) {
+      _nodDetected = true;
+      _onGestureDetected(LivenessGesture.nod);
+    }
+  }
+
   void _detectSmile(Face face) {
     final smilingProbability = face.smilingProbability;
     if (smilingProbability == null) return;
@@ -218,7 +251,7 @@ extension _GestureRecognition on _FaceLivenessState {
 
     _recordThresholdOutcome(gesture);
 
-    _setState(() {
+    _update(() {
       _completedGestures.add(gesture);
       if (_currentGestureIndex < _gestures.length - 1) {
         _currentGestureIndex++;
@@ -247,6 +280,8 @@ extension _GestureRecognition on _FaceLivenessState {
     _mouthOpenFrames = 0;
     _headShakeDirection = 0;
     _headShakeReversals = 0;
+    _nodDirection = 0;
+    _nodReversals = 0;
     _smileFrames = 0;
     _blinkDetected = false;
     _mouthOpenDetected = false;
@@ -254,5 +289,6 @@ extension _GestureRecognition on _FaceLivenessState {
     _smileDetected = false;
     _turnLeftDetected = false;
     _turnRightDetected = false;
+    _nodDetected = false;
   }
 }

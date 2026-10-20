@@ -9,7 +9,7 @@
 ///
 /// When [autoAdjust] is true (the default), the *gesture* thresholds
 /// (`blink*`, `mouthOpenRatio`, `smileProbability`, `headShakeAngle`,
-/// `turnAngle`) are nudged toward a struggling user during a step: if the
+/// `nodAngle`, `turnAngle`) are nudged toward a struggling user during a step: if the
 /// best value they reach sits just short of passing — within
 /// [autoAdjustTriggerFraction] of the threshold — for long enough, the
 /// threshold moves a small step in the easier direction. It can never drift
@@ -57,6 +57,15 @@ class LivenessThresholds {
   /// Number of direction reversals required — 1 ⇒ turn one way then the
   /// other once. Default 1. Config-only.
   final int? headShakeReversals;
+
+  // --- Nod -------------------------------------------------------------------
+  /// Pitch magnitude (degrees) that counts as "clearly down" or "clearly up"
+  /// for a nod. Default 10. Auto-adjustable.
+  final double? nodAngle;
+
+  /// Number of direction reversals required — 1 ⇒ down then up (or up then
+  /// down) once. Default 1. Config-only.
+  final int? nodReversals;
 
   // --- Turn left / right ----------------------------------------------------
   /// Yaw magnitude (degrees) to hold for a turn-left / turn-right step.
@@ -111,6 +120,8 @@ class LivenessThresholds {
     this.smileFrameCount,
     this.headShakeAngle,
     this.headShakeReversals,
+    this.nodAngle,
+    this.nodReversals,
     this.turnAngle,
     this.captureYawDegrees,
     this.capturePitchDegrees,

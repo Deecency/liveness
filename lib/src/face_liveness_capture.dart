@@ -1,4 +1,4 @@
-part of 'face_liveness.dart';
+part of 'liveness_controller.dart';
 
 // Variance-of-Laplacian (on a 240px greyscale copy) at or above which a
 // still is considered sharp enough that a second shot isn't worth taking.
@@ -7,7 +7,7 @@ const double _sharpEnoughScore = 300;
 /// The final "hold still" phase: grading each frame for pose / framing /
 /// lighting, driving the on-screen guidance, and once it's steady, locking
 /// focus + taking the sharpest still.
-extension _FinalCapture on _FaceLivenessState {
+extension _FinalCapture on LivenessController {
   /// Runs on every frame once all gestures are done. Grades the frame against
   /// the pose/framing/lighting checks (all from `_thr`), drives the on-screen
   /// guidance, and only lets the capture fire after `_thr.holdFrames` good
@@ -16,7 +16,7 @@ extension _FinalCapture on _FaceLivenessState {
     final hint = _assessCaptureFrame(face, uprightFrame, brightness);
 
     if (hint != _captureHint) {
-      _setState(() => _captureHint = hint);
+      _update(() => _captureHint = hint);
     }
 
     if (hint == null) {
@@ -91,10 +91,19 @@ extension _FinalCapture on _FaceLivenessState {
     return null;
   }
 
+  /// Called during the final capture hold when a frame has more than one
+  /// face and `config.rejectMultipleFaces` is on.
+  void _multipleFacesDuringCapture() {
+    if (_captureHint != LivenessCaptureHint.multipleFaces) {
+      _update(() => _captureHint = LivenessCaptureHint.multipleFaces);
+    }
+    _facingCameraFrames = (_facingCameraFrames - 3).clamp(0, 999);
+  }
+
   /// Called during the final capture hold when a frame has no face at all.
   void _noFaceDuringCapture() {
     if (_captureHint != LivenessCaptureHint.noFace) {
-      _setState(() => _captureHint = LivenessCaptureHint.noFace);
+      _update(() => _captureHint = LivenessCaptureHint.noFace);
     }
     _facingCameraFrames = (_facingCameraFrames - 3).clamp(0, 999);
   }
@@ -104,7 +113,7 @@ extension _FinalCapture on _FaceLivenessState {
   /// closes the page.
   Future<void> _completeSuccessfully() async {
     if (_isProcessing) return;
-    _setState(() {
+    _update(() {
       _isProcessing = true;
       _isCompleting = true;
     });
@@ -148,7 +157,7 @@ extension _FinalCapture on _FaceLivenessState {
         capturedImages: _capturedImages,
         completedGestures: _completedGestures.toList(),
         confidence: 0.95,
-        duration: DateTime.now().difference(_startTime!),
+        duration: DateTime.now().difference(_startTime),
         thresholdAdjustments: Map.of(_thresholdAdjustments),
       ),
     );

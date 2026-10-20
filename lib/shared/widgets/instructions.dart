@@ -118,6 +118,7 @@ class LivenessInstructionWidget extends StatelessWidget {
                     LivenessGesture.turnLeft => 'liveness/assets/turn_left.json',
                     LivenessGesture.turnRight => 'liveness/assets/turn_right.json',
                     LivenessGesture.mouthOpen => 'liveness/assets/mouth.json',
+                    LivenessGesture.nod => 'liveness/assets/nod.json',
                     _ => 'liveness/assets/shake.json',
                   }}',
                   height: 80,
