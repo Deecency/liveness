@@ -75,7 +75,7 @@ extension _FinalCapture on LivenessController {
           return LivenessCaptureHint.moveBack;
         }
         if ((cx - 0.5).abs() > _thr.maxFaceCenterOffset ||
-            (cy - 0.5).abs() > _thr.maxFaceCenterOffset) {
+            (cy - _thr.faceCenterY).abs() > _thr.maxFaceCenterOffset) {
           return LivenessCaptureHint.centerFace;
         }
       }
@@ -89,6 +89,22 @@ extension _FinalCapture on LivenessController {
     }
 
     return null;
+  }
+
+  /// A frame during the "get ready" pause: reports framing the same way the
+  /// final capture does (no face, move closer, centre...), so a screen can
+  /// guide the person before the gestures start. Nothing is scored.
+  void _preparingFrame(List<Face> faces, bool crowded, CameraImage image) {
+    final hint = crowded
+        ? LivenessCaptureHint.multipleFaces
+        : faces.isEmpty
+        ? LivenessCaptureHint.noFace
+        : _assessCaptureFrame(
+            faces.first,
+            _uprightFrameSize(image),
+            _estimateBrightness(image),
+          );
+    if (hint != _captureHint) _update(() => _captureHint = hint);
   }
 
   /// Called during the final capture hold when a frame has more than one

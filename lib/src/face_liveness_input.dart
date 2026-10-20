@@ -19,11 +19,7 @@ extension _CameraInput on LivenessController {
   /// per-frame file I/O — and drops frames that arrive while a previous one
   /// is still being processed instead of queuing them up.
   void _onCameraImage(CameraImage image) {
-    if (_disposed ||
-        _finished ||
-        _isDetecting ||
-        _isProcessing ||
-        _isWaitingToStart) {
+    if (_disposed || _finished || _isDetecting || _isProcessing) {
       return;
     }
 
@@ -53,7 +49,9 @@ extension _CameraInput on LivenessController {
             _update(() => _faceCount = faces.length);
           }
           final crowded = config.rejectMultipleFaces && faces.length > 1;
-          if (_isInFinalCapture) {
+          if (_isWaitingToStart) {
+            _preparingFrame(faces, crowded, image);
+          } else if (_isInFinalCapture) {
             if (crowded) {
               _multipleFacesDuringCapture();
             } else if (faces.isEmpty) {

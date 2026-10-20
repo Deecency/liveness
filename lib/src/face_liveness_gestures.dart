@@ -72,6 +72,8 @@ extension _GestureRecognition on LivenessController {
           _blinkCount++;
         }
 
+        _setProgress(LivenessGesture.blink, _blinkCount / _thr.blinkCount);
+
         // If we detected enough blinks
         if (_blinkCount >= _thr.blinkCount && !_blinkDetected) {
           _blinkDetected = true;
@@ -127,6 +129,10 @@ extension _GestureRecognition on LivenessController {
 
     if (ratio > threshold) {
       _mouthOpenFrames++;
+      _setProgress(
+        LivenessGesture.mouthOpen,
+        _mouthOpenFrames / _thr.mouthOpenFrames,
+      );
       if (_mouthOpenFrames >= _thr.mouthOpenFrames && !_mouthOpenDetected) {
         _mouthOpenDetected = true;
         _onGestureDetected(LivenessGesture.mouthOpen);
@@ -135,6 +141,10 @@ extension _GestureRecognition on LivenessController {
       // Decay instead of hard-reset so a single jittery frame (ML Kit lip
       // contours flicker) doesn't wipe out a genuinely-held open mouth.
       _mouthOpenFrames = (_mouthOpenFrames - 1).clamp(0, 999);
+      _setProgress(
+        LivenessGesture.mouthOpen,
+        _mouthOpenFrames / _thr.mouthOpenFrames,
+      );
     }
   }
 
@@ -163,6 +173,17 @@ extension _GestureRecognition on LivenessController {
       }
       _headShakeDirection = direction;
     }
+
+    _setProgress(
+      LivenessGesture.headShake,
+      _swingProgress(
+        angle: headEulerAngleY,
+        threshold: turnThreshold,
+        direction: _headShakeDirection,
+        reversals: _headShakeReversals,
+        required: _thr.headShakeReversals,
+      ),
+    );
 
     if (_headShakeReversals >= _thr.headShakeReversals && !_headShakeDetected) {
       _headShakeDetected = true;
@@ -194,6 +215,17 @@ extension _GestureRecognition on LivenessController {
       _nodDirection = direction;
     }
 
+    _setProgress(
+      LivenessGesture.nod,
+      _swingProgress(
+        angle: pitch,
+        threshold: threshold,
+        direction: _nodDirection,
+        reversals: _nodReversals,
+        required: _thr.nodReversals,
+      ),
+    );
+
     if (_nodReversals >= _thr.nodReversals && !_nodDetected) {
       _nodDetected = true;
       _onGestureDetected(LivenessGesture.nod);
@@ -208,6 +240,7 @@ extension _GestureRecognition on LivenessController {
 
     if (smilingProbability > _thr.smileProb.value) {
       _smileFrames++;
+      _setProgress(LivenessGesture.smile, _smileFrames / _thr.smileFrames);
 
       if (_smileFrames >= _thr.smileFrames && !_smileDetected) {
         _smileDetected = true;
@@ -216,6 +249,7 @@ extension _GestureRecognition on LivenessController {
     } else {
       // Decay rather than hard-reset — tolerate a brief classifier dip.
       _smileFrames = (_smileFrames - 1).clamp(0, 999);
+      _setProgress(LivenessGesture.smile, _smileFrames / _thr.smileFrames);
     }
   }
 
@@ -225,6 +259,10 @@ extension _GestureRecognition on LivenessController {
 
     // Turn-left registers as a positive yaw in this coordinate convention.
     _trackApproach(_thr.turnAngle, headEulerAngleY);
+    _setProgress(
+      LivenessGesture.turnLeft,
+      headEulerAngleY / _thr.turnAngle.value,
+    );
 
     if (headEulerAngleY > _thr.turnAngle.value && !_turnLeftDetected) {
       _turnLeftDetected = true;
@@ -239,6 +277,10 @@ extension _GestureRecognition on LivenessController {
     // Turn-right is a negative yaw; feed its magnitude so the shared
     // turnAngle threshold sees an "above the line" value either way.
     _trackApproach(_thr.turnAngle, -headEulerAngleY);
+    _setProgress(
+      LivenessGesture.turnRight,
+      -headEulerAngleY / _thr.turnAngle.value,
+    );
 
     if (-headEulerAngleY > _thr.turnAngle.value && !_turnRightDetected) {
       _turnRightDetected = true;
@@ -253,6 +295,7 @@ extension _GestureRecognition on LivenessController {
 
     _update(() {
       _completedGestures.add(gesture);
+      _gestureProgress = 0;
       if (_currentGestureIndex < _gestures.length - 1) {
         _currentGestureIndex++;
         _currentStep = _gestures[_currentGestureIndex];
@@ -273,6 +316,36 @@ extension _GestureRecognition on LivenessController {
         _resetTimer();
       }
     });
+  }
+
+  /// Publishes [progress] (clamped to 0–1) for [gesture], if it's the one
+  /// being asked for. Small changes are held back so a screen isn't rebuilt
+  /// for every frame's jitter.
+  void _setProgress(LivenessGesture gesture, double progress) {
+    if (_currentStep != gesture || !progress.isFinite) return;
+    final p = progress.clamp(0.0, 1.0);
+    if ((p - _gestureProgress).abs() < 0.02 && p != 0 && p != 1) return;
+    if (p == _gestureProgress) return;
+    _update(() => _gestureProgress = p);
+  }
+
+  /// Progress through a side-to-side (or up-and-down) swing that needs
+  /// [required] direction changes, i.e. [required] + 1 sides reached: the
+  /// sides reached so far, plus how far [angle] has got toward the next
+  /// one.
+  double _swingProgress({
+    required double angle,
+    required double threshold,
+    required int direction,
+    required int reversals,
+    required int required,
+  }) {
+    if (threshold <= 0) return 0;
+    final reached = (direction != 0 ? 1 : 0) + reversals;
+    final towardNext = direction == 0
+        ? angle.abs() / threshold
+        : math.max(0.0, -direction * angle) / threshold;
+    return (reached + towardNext.clamp(0.0, 1.0)) / (required + 1);
   }
 
   void _resetGestureDetectionState() {

@@ -108,6 +108,7 @@ class _ResolvedThresholds {
       minFaceWidthRatio = c.minFaceWidthRatio ?? 0.26,
       maxFaceWidthRatio = c.maxFaceWidthRatio ?? 0.72,
       maxFaceCenterOffset = c.maxFaceCenterOffset ?? 0.18,
+      faceCenterY = c.faceCenterTargetY ?? 0.5,
       minBrightness = c.minFrameBrightness ?? 55,
       maxBrightness = c.maxFrameBrightness ?? 225,
       holdFrames = c.captureHoldFrames ?? 20,
@@ -179,6 +180,7 @@ class _ResolvedThresholds {
   final double minFaceWidthRatio;
   final double maxFaceWidthRatio;
   final double maxFaceCenterOffset;
+  final double faceCenterY;
   final double minBrightness;
   final double maxBrightness;
   final int holdFrames;

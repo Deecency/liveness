@@ -103,6 +103,9 @@ class LivenessController extends ChangeNotifier
   String _errorMessage = '';
   int _faceCount = 0;
 
+  // How far into the current gesture the person is, 0–1. See _setProgress.
+  double _gestureProgress = 0;
+
   // Diagnostic-only frame counters — see _CameraInput._onCameraImage and
   // _CameraInput._inputImageFromCameraImage for why these silent branches
   // specifically needed visibility.
@@ -195,6 +198,7 @@ class LivenessController extends ChangeNotifier
     gestures: _gestures,
     currentIndex: _currentGestureIndex,
     currentGesture: _currentStep,
+    gestureProgress: _gestureProgress,
     completed: Set.unmodifiable(_completedGestures),
     hint: _captureHint,
     faceCount: _faceCount,
@@ -272,6 +276,8 @@ class LivenessController extends ChangeNotifier
       if (_disposed || _finished) return;
       _update(() {
         _isWaitingToStart = false;
+        // The get-ready framing hint doesn't carry into the gestures.
+        _captureHint = null;
         if (_gestures.isNotEmpty) {
           _currentStep = _gestures[0];
         }
@@ -279,6 +285,7 @@ class LivenessController extends ChangeNotifier
       _beginStepTracking();
       _maybeStartLivenessDetection();
     });
+    _maybeStartLivenessDetection();
   }
 
   /// Ends the session as cancelled.
@@ -351,11 +358,12 @@ class LivenessController extends ChangeNotifier
     });
   }
 
-  /// Starts the live frame stream once both the initial "get ready" delay
-  /// has elapsed and the camera has finished initializing — whichever
-  /// happens last. Safe to call from either place; only starts once.
+  /// Starts the live frame stream once the session has started and the
+  /// camera is ready — whichever happens last. Frames during the "get
+  /// ready" pause only count faces and judge framing; no gesture is
+  /// scored until it ends. Safe to call from anywhere; only starts once.
   void _maybeStartLivenessDetection() {
-    if (_livenessStarted || _isWaitingToStart || _disposed || _finished) {
+    if (_livenessStarted || !_started || _disposed || _finished) {
       return;
     }
     final controller = _cameraController;

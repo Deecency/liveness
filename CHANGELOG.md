@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.2.0
+
+- `LivenessState.gestureProgress`: 0–1 into the current gesture (turn angle
+  reached, smile or open-mouth frames held, blinks done, sides of a shake
+  or nod reached), for a progress arc that fills as the person moves.
+- Faces are detected from the moment the camera is ready: during the
+  `preparing` pause `faceCount` is live and `hint` reports framing (no
+  face, move closer, centre, light, multiple faces). No gesture counts
+  until the pause ends; the hint resets to null when it does.
+  `FaceLiveness`'s own screen doesn't show it, so it looks the same.
+- `LivenessThresholds.faceCenterTargetY` (default 0.5): where the face's
+  centre should sit, top to bottom, for a guide that isn't centred.
+
 ## 1.1.0
 
 - `LivenessController`: the liveness check without its screen — camera,

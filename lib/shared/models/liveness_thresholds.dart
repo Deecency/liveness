@@ -88,6 +88,14 @@ class LivenessThresholds {
   /// Default 0.18.
   final double? maxFaceCenterOffset;
 
+  /// Where the face's centre should sit, top to bottom, as a fraction of
+  /// the frame: 0.5 is the middle (default), 0.43 is a little above it. For
+  /// a screen whose face guide isn't vertically centred. With the preview
+  /// filling a portrait screen (as `LivenessPreview` does when given the
+  /// whole screen), a fraction of the screen's height is the same fraction
+  /// of the frame's. Measured against [maxFaceCenterOffset].
+  final double? faceCenterTargetY;
+
   /// Mean-luma (0–255) window the captured frame must fall inside.
   /// Defaults 55 and 225.
   final double? minFrameBrightness;
@@ -129,6 +137,7 @@ class LivenessThresholds {
     this.minFaceWidthRatio,
     this.maxFaceWidthRatio,
     this.maxFaceCenterOffset,
+    this.faceCenterTargetY,
     this.minFrameBrightness,
     this.maxFrameBrightness,
     this.captureHoldFrames,

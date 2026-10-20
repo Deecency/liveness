@@ -157,12 +157,20 @@ controller.dispose();
 
 `LivenessState` has `phase` (`preparing`, `gesture`, `finalCapture`,
 `completing`, `finished`), `cameraReady`, `gestures` (the order chosen for
-this session), `currentIndex`, `currentGesture`, `completed`, `hint`
-(during `finalCapture`: what to fix, null when the frame is good),
-`faceCount`, `timeRemaining`/`timeoutSeconds`, `error` and `result`. Map
+this session), `currentIndex`, `currentGesture`, `gestureProgress` (0–1
+into the current gesture, e.g. how far the head has turned), `completed`,
+`hint` (during `preparing` and `finalCapture`: what to fix — no face, move
+closer, centre, light — or null when the frame is good), `faceCount`,
+`timeRemaining`/`timeoutSeconds`, `error` and `result`. Faces are tracked
+from the moment the camera is ready, so the "get ready" pause can already
+say "face found" or "move closer"; no gesture counts until it ends. Map
 the enums to your own wording; the package's English is only used by its
 own screen. `cancel()` ends the session; disposing an unfinished one
 completes `result` as cancelled.
+
+If your face guide isn't vertically centred, tell the framing check where
+it is: `LivenessThresholds(faceCenterTargetY: 0.43)` for a guide whose
+centre is 43% down a full-screen preview (the default is 0.5).
 
 With `rejectMultipleFaces: true`, a frame with more than one face counts
 for nothing and the hint becomes `LivenessCaptureHint.multipleFaces`. It's
