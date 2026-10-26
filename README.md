@@ -81,6 +81,54 @@ app's own project files, not in this package.
   must print a `T _TfLiteModelCreate` line.
 - Simulator: ML Kit has no arm64 simulator slice. In the `post_install`
   pods loop: `config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'`.
+- `pod install` clones the whole TensorFlow repo and can sit there for
+  an hour. `tflite_flutter` depends on `TensorFlowLiteSwift`, which has
+  no binary release, so CocoaPods clones
+  `github.com/tensorflow/tensorflow` to build it from source. Nothing
+  uses it: `tflite_flutter` is an FFI plugin that resolves `TfLite*` out
+  of the prebuilt `TensorFlowLiteC` xcframework with `dlsym` — the same
+  reason the stripping fix above is needed. Point the Swift pod at the C
+  one instead, as a local pod so CocoaPods fetches nothing. Create
+  `ios/podspecs/TensorFlowLiteSwift/TensorFlowLiteSwift.podspec`:
+
+  ```ruby
+  Pod::Spec.new do |s|
+    s.name     = 'TensorFlowLiteSwift'
+    s.version  = '2.12.0'
+    s.summary  = 'Maps onto TensorFlowLiteC; tflite_flutter is FFI-only.'
+    s.homepage = 'https://www.tensorflow.org/lite'
+    s.license  = { :type => 'Apache-2.0' }
+    s.authors  = 'Google Inc.'
+    s.platform = :ios, '12.0'
+
+    # Required by the spec validator, never fetched: `:path` below makes
+    # this a local pod, so CocoaPods reads this file and downloads nothing.
+    # Switching the Podfile to `:podspec` WOULD clone the repo named here,
+    # which is the whole thing this shim exists to avoid.
+    s.source = {
+      :git => 'https://github.com/tensorflow/tensorflow.git',
+      :tag => "v#{s.version}",
+    }
+
+    s.dependency 'TensorFlowLiteC', '2.12.0'
+    s.subspec('Core')   { |c| c.dependency 'TensorFlowLiteC', '2.12.0' }
+    s.subspec('Metal')  { |c| c.dependency 'TensorFlowLiteC/Metal', '2.12.0' }
+    s.subspec('CoreML') { |c| c.dependency 'TensorFlowLiteC/CoreML', '2.12.0' }
+  end
+  ```
+
+  Then in the `Runner` target in `ios/Podfile`, above
+  `flutter_install_all_ios_pods`:
+
+  ```ruby
+  pod 'TensorFlowLiteSwift', :path => 'podspecs/TensorFlowLiteSwift'
+  ```
+
+  `:path` is what keeps it local — with `:podspec` CocoaPods still
+  downloads the spec's `source`. Keep the version in step with
+  `tflite_version` in `tflite_flutter/ios/tflite_flutter.podspec`.
+  Because this swaps out a dependency, run the face match on a device
+  afterwards, not just the camera.
 
 **Android** (`android/app/build.gradle.kts`, inside `android { }`)
 
@@ -96,7 +144,11 @@ androidResources {
 }
 buildTypes {
     release {
-        isMinifyEnabled = false // R8 needs ML Kit/tflite keep rules first
+        // R8 may stay on, with keep rules for ML Kit and TensorFlow Lite
+        // in proguard-rules.pro (Solace's android/app/proguard-rules.pro
+        // is a working set); Google Play's release check wants the DEX
+        // obfuscated. Without those rules, turn it off:
+        // isMinifyEnabled = false
         isShrinkResources = false
     }
 }
