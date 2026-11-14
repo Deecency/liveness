@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.3.0
+
+- TensorFlow Lite now comes from `flutter_litert` instead of
+  `tflite_flutter`. It is a maintained fork with the same `Interpreter`
+  API, so `FaceCompare` behaves as before; the models are unchanged.
+  `tflite_flutter` has no Swift Package Manager support and has not been
+  updated since 0.12.1.
+- iOS apps should delete the `TensorFlowLiteSwift` shim (the local podspec
+  and its `pod` line in `ios/Podfile`): `flutter_litert` downloads its own
+  prebuilt TensorFlow Lite frameworks and depends on no TensorFlow pod.
+  Keeping the shim would link a second copy of `TensorFlowLiteC`.
+- No API change. Run the face match on a device after upgrading.
+
 ## 1.2.0
 
 - `LivenessState.gestureProgress`: 0–1 into the current gesture (turn angle
