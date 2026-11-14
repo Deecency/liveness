@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.4.0
+
+- ML Kit moves to `google_mlkit_face_detection` 1.0.3 (from 0.15.1). The
+  Dart API is unchanged.
+- **iOS apps must enable Swift Package Manager.** ML Kit 1.0 ships its iOS
+  plugin only as a Swift package, so it no longer builds through
+  CocoaPods. See "App setup" in the README.
+- The iOS simulator no longer needs `arm64` excluded: ML Kit's Swift
+  package carries an arm64 simulator slice, which the iOS 26+ simulators
+  on Apple Silicon require. Apps should delete that workaround.
+- Minimum iOS is now 15.0 (was 15.5).
+
 ## 1.3.0
 
 - TensorFlow Lite now comes from `flutter_litert` instead of

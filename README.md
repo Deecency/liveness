@@ -53,8 +53,21 @@ app's own project files, not in this package.
 
 **iOS**
 
-- Minimum iOS 15.5 (ML Kit): `platform :ios, '15.5'` in `ios/Podfile`
-  and `IPHONEOS_DEPLOYMENT_TARGET = 15.5` in the Runner project.
+- Swift Package Manager must be on. Since 1.4.0, ML Kit
+  (`google_mlkit_face_detection` 1.0) ships only a Swift package, with no
+  podspec, so it cannot build through CocoaPods. In the app's
+  `pubspec.yaml`:
+
+  ```yaml
+  flutter:
+    config:
+      enable-swift-package-manager: true
+  ```
+
+  Plugins that still lack SPM support keep building with CocoaPods
+  alongside it.
+- Minimum iOS 15.0 (ML Kit): `IPHONEOS_DEPLOYMENT_TARGET` in the Runner
+  project, and `platform :ios` in `ios/Podfile` if there is one.
 - Release stripping can remove `TfLiteModelCreate` (TensorFlow Lite is
   reached over FFI, looked up at runtime), and the face match then fails
   with "Failed to lookup symbol 'TfLiteModelCreate'". `flutter_litert`
@@ -81,8 +94,11 @@ app's own project files, not in this package.
   Check the archived binary:
   `nm -gU build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app/Runner | grep TfLiteModelCreate`
   must print a `T _TfLiteModelCreate` line.
-- Simulator: ML Kit has no arm64 simulator slice. In the `post_install`
-  pods loop: `config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'`.
+- Upgrading from 1.3.0 or earlier: delete any
+  `EXCLUDED_ARCHS[sdk=iphonesimulator*] = arm64` those versions needed in
+  `ios/Podfile` and the Runner project. ML Kit's Swift package has an
+  arm64 simulator slice, and the iOS 26+ simulators on Apple Silicon
+  require arm64.
 - Upgrading from 1.2.0 or earlier: delete the `TensorFlowLiteSwift` shim
   those versions needed — `ios/podspecs/TensorFlowLiteSwift/` and the
   `pod 'TensorFlowLiteSwift', :path => ...` line in `ios/Podfile` — then
