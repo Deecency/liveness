@@ -253,11 +253,31 @@ extension _GestureRecognition on LivenessController {
     }
   }
 
+  /// The head's yaw as the person in front of the camera means it: positive
+  /// when they turn to their own left, the same on both platforms.
+  ///
+  /// ML Kit measures yaw in the image it is handed, and the two camera
+  /// plugins hand it different images: camera_avfoundation mirrors the iOS
+  /// front-camera stream (`isVideoMirrored` on the capture connection) while
+  /// the Android plugin does not. So one and the same turn reads with
+  /// opposite signs, and iOS asked people to turn right to pass the
+  /// turn-left step. Android's sign is the reference, as it is what these
+  /// steps were tuned against.
+  ///
+  /// Only the turn steps need this. Every other use of yaw — the head
+  /// shake, the straight-on check before capture — looks at its size, not
+  /// its direction.
+  double? _userYaw(Face face) {
+    final yaw = face.headEulerAngleY;
+    if (yaw == null) return null;
+    return Platform.isIOS ? -yaw : yaw;
+  }
+
   void _detectTurnLeft(Face face) {
-    final headEulerAngleY = face.headEulerAngleY;
+    final headEulerAngleY = _userYaw(face);
     if (headEulerAngleY == null) return;
 
-    // Turn-left registers as a positive yaw in this coordinate convention.
+    // Turn-left is a positive yaw (see _userYaw).
     _trackApproach(_thr.turnAngle, headEulerAngleY);
     _setProgress(
       LivenessGesture.turnLeft,
@@ -271,7 +291,7 @@ extension _GestureRecognition on LivenessController {
   }
 
   void _detectTurnRight(Face face) {
-    final headEulerAngleY = face.headEulerAngleY;
+    final headEulerAngleY = _userYaw(face);
     if (headEulerAngleY == null) return;
 
     // Turn-right is a negative yaw; feed its magnitude so the shared

@@ -11,6 +11,11 @@
   and its `pod` line in `ios/Podfile`): `flutter_litert` downloads its own
   prebuilt TensorFlow Lite frameworks and depends on no TensorFlow pod.
   Keeping the shim would link a second copy of `TensorFlowLiteC`.
+- Fixed: on iOS, turn left and turn right were swapped — passing the
+  turn-left step took a turn to the right. The iOS camera plugin mirrors
+  the front-camera stream and Android's does not, so ML Kit reported the
+  head's yaw with opposite signs; the turn steps now read it the same way
+  on both. Android is unchanged.
 - No API change. Run the face match on a device after upgrading.
 
 ## 1.2.0
