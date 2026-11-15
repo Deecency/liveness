@@ -26,7 +26,7 @@ dependencies:
   liveness:
     git:
       url: https://github.com/Deecency/liveness.git
-      ref: v1.0.0
+      ref: v1.4.0
 ```
 
 Fetching it needs git access to the repo (the machine's GitHub sign-in).
@@ -41,11 +41,12 @@ dependency_overrides:
     path: ../liveness
 ```
 
-## App setup (required — release builds break without it)
+## App setup (required — builds succeed, but the app breaks without it)
 
-Both bugs below show only in release builds; debug and `flutter run`
-work, which is how they slipped through in Solace. They're fixed in each
-app's own project files, not in this package.
+Each step below is in the app's own project files, not in this package,
+and none of the failures shows at build time: `flutter build` succeeds,
+and some show only in release builds. Test on real devices, through the
+face match.
 
 **Both platforms:** camera permission — `NSCameraUsageDescription` in
 `ios/Runner/Info.plist`, `android.permission.CAMERA` in
@@ -68,32 +69,56 @@ app's own project files, not in this package.
   alongside it.
 - Minimum iOS 15.0 (ML Kit): `IPHONEOS_DEPLOYMENT_TARGET` in the Runner
   project, and `platform :ios` in `ios/Podfile` if there is one.
-- Release stripping can remove `TfLiteModelCreate` (TensorFlow Lite is
-  reached over FFI, looked up at runtime), and the face match then fails
-  with "Failed to lookup symbol 'TfLiteModelCreate'". `flutter_litert`
-  ships an anchor meant to keep these symbols, but until that is proven
-  in a release build, keep stripping off for them. At the end of
-  `post_install` in `ios/Podfile`:
+- **ML Kit's Swift package needs two Runner changes**, or face detection
+  crashes on a device (debug builds too) with
+  `-[MLKITx_CCTLogContext hashForFilePath]: unrecognized selector`, or
+  cannot load its model. ML Kit ships static libraries; under CocoaPods
+  its pods made CocoaPods add `-ObjC`, so apps on 1.3.0 or earlier never
+  set it themselves.
 
-  ```ruby
-  runner_project = Xcodeproj::Project.open(
-    File.join(File.dirname(File.realpath(__FILE__)), 'Runner.xcodeproj'),
-  )
-  runner_project.targets.each do |target|
-    next unless target.name == 'Runner'
-    target.build_configurations.each do |config|
-      next unless %w[Release Profile].include?(config.name)
-      config.build_settings['DEAD_CODE_STRIPPING'] = 'NO'
-      config.build_settings['STRIP_STYLE'] = 'non-global'
-      config.build_settings['STRIP_INSTALLED_PRODUCT'] = 'NO'
-    end
-  end
-  runner_project.save
-  ```
+  1. **Other Linker Flags** on the Runner target, every configuration:
+     `$(inherited) -ObjC -all_load`. ML Kit adds methods in Objective-C
+     categories and registers its models in static initialisers, and
+     without these flags the linker drops both. Both flags are what ML
+     Kit's own plugin README asks for.
+  2. **A Run Script build phase** on Runner, placed after "Copy Bundle
+     Resources" and named e.g. "Copy ML Kit model bundles". ML Kit looks
+     for `GoogleMVFaceDetectorResources.bundle` in the main bundle, but
+     Swift Package Manager leaves it inside
+     `MLKitFaceDetection.framework`:
 
-  Check the archived binary:
-  `nm -gU build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app/Runner | grep TfLiteModelCreate`
-  must print a `T _TfLiteModelCreate` line.
+     ```sh
+     set -eu
+     src="${BUILT_PRODUCTS_DIR}/MLKitFaceDetection.framework/GoogleMVFaceDetectorResources.bundle"
+     dst="${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleMVFaceDetectorResources.bundle"
+     if [ ! -d "$src" ]; then
+       echo "error: $src not found; did ML Kit's package layout change?" >&2
+       exit 1
+     fi
+     rm -rf "$dst"
+     cp -R "$src" "$dst"
+     ```
+
+     Set the phase's Input Files to the `src` path and Output Files to the
+     `dst` path, so Xcode reruns it only when the model changes. It copies
+     from the framework, so it follows whichever ML Kit version is in use,
+     and fails the build if the bundle is missing. The framework keeps its
+     signed copy too, so the app carries the 9.6 MB model twice; together
+     with `-all_load` the IPA grows by about 12 MB.
+
+  Pass's `ios/Runner.xcodeproj` has both, as a working example.
+- **No strip settings.** Earlier versions of this README said to turn
+  release stripping off (`DEAD_CODE_STRIPPING`, `STRIP_STYLE`,
+  `STRIP_INSTALLED_PRODUCT`) so TensorFlow Lite's `TfLiteModelCreate`
+  survived. `flutter_litert` exports the `TfLite*` symbols from its own
+  framework, and a release build without those settings matched faces
+  normally (model loaded in 35 ms). Delete them from `ios/Podfile`'s
+  `post_install` and from the Runner project if an app has them. If a
+  face match ever fails with "Failed to lookup symbol
+  'TfLiteModelCreate'", check that the archive's `flutter-litert`
+  framework (hyphenated) exports it:
+  `nm -gU build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app/Frameworks/flutter-litert.framework/flutter-litert | grep TfLiteModelCreate`
+  should print a `T _TfLiteModelCreate` line.
 - Upgrading from 1.3.0 or earlier: delete any
   `EXCLUDED_ARCHS[sdk=iphonesimulator*] = arm64` those versions needed in
   `ios/Podfile` and the Runner project. ML Kit's Swift package has an
