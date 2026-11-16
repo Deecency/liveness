@@ -38,6 +38,7 @@ class LivenessState {
     this.gestureProgress = 0,
     this.hint,
     this.error,
+    this.errorKind,
     this.result,
   });
 
@@ -87,6 +88,10 @@ class LivenessState {
   /// What went wrong (the camera failed to start), when something did. The
   /// session then finishes as failed a few seconds later.
   final String? error;
+
+  /// The kind of [error], for showing it in the app's language through
+  /// `LivenessLocalizations.error`. [error] stays in English, for logs.
+  final LivenessErrorKind? errorKind;
 
   /// The outcome, once [phase] is [LivenessPhase.finished].
   final LivenessResult? result;

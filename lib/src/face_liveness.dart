@@ -89,7 +89,8 @@ class _FaceLivenessState extends State<FaceLiveness> {
           onTap: _onCancel,
         ),
         title: Text(
-          widget.config.title,
+          widget.config.title ??
+              LivenessLocalizations.of(context, widget.config).title,
           style: TextStyle(
             color: theme.titleColor,
             fontWeight: FontWeight.w600,
@@ -123,7 +124,10 @@ class _FaceLivenessState extends State<FaceLiveness> {
     final capturing =
         state.phase == LivenessPhase.finalCapture ||
         state.phase == LivenessPhase.completing;
-    final error = current.error;
+    final kind = current.errorKind;
+    final error = kind == null
+        ? current.error
+        : LivenessLocalizations.of(context, widget.config).error(kind);
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
       child: Column(

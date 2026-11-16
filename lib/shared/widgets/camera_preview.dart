@@ -1,4 +1,5 @@
 import 'package:camera/camera.dart';
+import 'package:liveness/shared/l10n/liveness_localizations.dart';
 import 'package:liveness/shared/models/config.dart';
 import 'package:liveness/shared/theme.dart';
 import 'package:material_ui/material_ui.dart';
@@ -51,16 +52,15 @@ class CameraPreviewWidget extends StatelessWidget {
             tween: Tween(begin: 1.0, end: progress),
             duration: const Duration(milliseconds: 600),
             curve: Curves.easeOut,
-            builder: (context, value, _) =>
-                CustomPaint(
-                  size: Size(theme.ringSize, theme.ringSize),
-                  painter: _RingPainter(
-                    progress: value,
-                    color: ringColor,
-                    trackColor: ringColor.withValues(alpha: 0.12),
-                    strokeWidth: theme.ringThickness,
-                  ),
-                ),
+            builder: (context, value, _) => CustomPaint(
+              size: Size(theme.ringSize, theme.ringSize),
+              painter: _RingPainter(
+                progress: value,
+                color: ringColor,
+                trackColor: ringColor.withValues(alpha: 0.12),
+                strokeWidth: theme.ringThickness,
+              ),
+            ),
           ),
           // Camera circle
           Container(
@@ -76,7 +76,7 @@ class CameraPreviewWidget extends StatelessWidget {
                 fit: StackFit.expand,
                 children: [
                   initialised
-                      ? _buildCameraLoading(theme)
+                      ? _buildCameraLoading(context, theme)
                       : OverflowBox(
                           maxWidth: double.infinity,
                           maxHeight: double.infinity,
@@ -107,7 +107,7 @@ class CameraPreviewWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildCameraLoading(LivenessTheme theme) {
+  Widget _buildCameraLoading(BuildContext context, LivenessTheme theme) {
     return Container(
       color: theme.surfaceColor,
       child: Column(
@@ -123,7 +123,7 @@ class CameraPreviewWidget extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Text(
-            'Initializing camera…',
+            LivenessLocalizations.of(context, config).initializingCamera,
             style: TextStyle(
               fontSize: 13,
               color: theme.mutedTextColor,
