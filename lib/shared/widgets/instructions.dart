@@ -1,9 +1,9 @@
 import 'package:animate_do/animate_do.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:liveness/shared/models/config.dart';
 import 'package:liveness/shared/models/enums.dart';
 import 'package:lottie/lottie.dart';
+import 'package:material_ui/material_ui.dart';
 // isCompleting isInFinalCapture
 
 class LivenessInstructionWidget extends StatelessWidget {

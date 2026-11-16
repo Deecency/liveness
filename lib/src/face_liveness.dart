@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:liveness/shared/shared.dart';
 import 'package:liveness/src/liveness_controller.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// The ready-made liveness screen: the package's own look, drawn over a
 /// [LivenessController]. An app that wants its own design uses
@@ -70,7 +70,10 @@ class _FaceLivenessState extends State<FaceLiveness> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      _MaterialLocalizationsFallback(child: Builder(builder: _page));
+
+  Widget _page(BuildContext context) {
     final theme = widget.config.theme;
 
     return Scaffold(
@@ -249,6 +252,39 @@ class _CircleIconButton extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Supplies Material localizations when the host app provides none of
+/// material_ui's.
+///
+/// An app still on `package:flutter/material.dart` registers that library's
+/// localizations, which material_ui's widgets cannot see, and its [AppBar]
+/// then fails with "No MaterialLocalizations found". Here the page falls
+/// back to Flutter's own translations for the app's locale, or English. In
+/// an app on material_ui it changes nothing.
+class _MaterialLocalizationsFallback extends StatelessWidget {
+  const _MaterialLocalizationsFallback({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasOwn =
+        Localizations.of<MaterialLocalizations>(
+          context,
+          MaterialLocalizations,
+        ) !=
+        null;
+    if (hasOwn) return child;
+    return Localizations.override(
+      context: context,
+      delegates: const [
+        GlobalMaterialLocalizations.delegate,
+        DefaultMaterialLocalizations.delegate,
+      ],
+      child: child,
     );
   }
 }

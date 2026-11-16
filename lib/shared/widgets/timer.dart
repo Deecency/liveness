@@ -1,6 +1,6 @@
 import 'package:liveness/liveness.dart';
-import 'package:flutter/material.dart';
 import 'package:liveness/shared/models/config.dart';
+import 'package:material_ui/material_ui.dart';
 
 class ProgressTimer extends StatelessWidget {
   const ProgressTimer({

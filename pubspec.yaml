@@ -1,11 +1,12 @@
 name: liveness
 description: A Flutter plugin for face verification and liveness detection using MobileFaceNet
   and ML Kit. Supports image-to-image and image-to-liveness comparison.
-version: 1.4.0
+version: 1.5.0
 
 environment:
-  sdk: ^3.8.1
-  flutter: ">=3.10.0"
+  # material_ui and cupertino_ui need Flutter 3.47 / Dart 3.13.
+  sdk: ^3.13.0
+  flutter: ">=3.47.0"
 
 # Add regular dependencies here.
 dependencies:
@@ -23,6 +24,10 @@ dependencies:
   # 1.0 moved iOS to Swift Package Manager: the plugin ships only a
   # Package.swift, so apps must have SPM enabled (see the README).
   google_mlkit_face_detection: ^1.0.3
+  # Flutter's Material and Cupertino libraries, now standalone packages
+  # (package:flutter/material.dart and cupertino.dart are deprecated).
+  material_ui: ^1.11.0
+  cupertino_ui: ^1.1.6
 
 dev_dependencies:
   flutter_test:

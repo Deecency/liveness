@@ -1,6 +1,6 @@
 import 'package:camera/camera.dart';
-import 'package:flutter/material.dart';
 import 'package:liveness/src/liveness_controller.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// The live front-camera picture of a [LivenessController], with nothing
 /// drawn on it, filling whatever space it's given (cropped to cover, never

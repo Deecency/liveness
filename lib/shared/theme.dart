@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Visual theming for the liveness verification screen.
 /// Layered on top of LivenessConfig's primary/success/error colors.

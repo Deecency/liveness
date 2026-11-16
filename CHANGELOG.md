@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.5.0
+
+- **Needs Flutter 3.47 or later (Dart 3.13).** The package now imports
+  Flutter's standalone `material_ui` and `cupertino_ui` packages instead of
+  `package:flutter/material.dart` and `cupertino.dart`, which Flutter 3.47
+  deprecated. The API is unchanged.
+- Works in apps on either library. An app still on
+  `package:flutter/material.dart` provides Material localizations that
+  `material_ui`'s widgets cannot see, so the liveness screen now supplies
+  its own when it finds none (Flutter's translations for the app's locale,
+  else English); without that its app bar failed with "No
+  MaterialLocalizations found".
+- In such an app the screen also no longer sees the app's Material theme:
+  text without a `LivenessTheme.fontFamily` uses Flutter's default font,
+  not the app's. Set `fontFamily`, or move the app to `material_ui`
+  (`dart fix --apply --code=migrate_design_widgets`).
+
 ## 1.4.0
 
 - ML Kit moves to `google_mlkit_face_detection` 1.0.3 (from 0.15.1). The

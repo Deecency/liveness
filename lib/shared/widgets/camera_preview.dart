@@ -1,7 +1,7 @@
 import 'package:camera/camera.dart';
 import 'package:liveness/shared/models/config.dart';
 import 'package:liveness/shared/theme.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class CameraPreviewWidget extends StatelessWidget {
   const CameraPreviewWidget({

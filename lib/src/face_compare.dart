@@ -4,10 +4,10 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_litert/flutter_litert.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
-import 'package:flutter_litert/flutter_litert.dart';
 
 part 'face_compare_align.dart';
 part 'face_compare_diagnostic.dart';

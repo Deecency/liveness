@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Enum for liveness result status
 enum LivenessResultStatus { success, failed, timeout, cancelled }

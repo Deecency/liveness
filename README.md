@@ -26,7 +26,7 @@ dependencies:
   liveness:
     git:
       url: https://github.com/Deecency/liveness.git
-      ref: v1.4.0
+      ref: v1.5.0
 ```
 
 Fetching it needs git access to the repo (the machine's GitHub sign-in).
@@ -47,6 +47,13 @@ Each step below is in the app's own project files, not in this package,
 and none of the failures shows at build time: `flutter build` succeeds,
 and some show only in release builds. Test on real devices, through the
 face match.
+
+**Flutter:** 3.47 or later, from 1.5.0, which builds on the standalone
+`material_ui` and `cupertino_ui` packages. Apps on either those or the
+deprecated `package:flutter/material.dart` work. In an app still on the
+latter, the screen cannot see the app's Material theme, so set
+`LivenessTheme.fontFamily` to keep the app's font, or move the app over
+with `dart fix --apply --code=migrate_design_widgets`.
 
 **Both platforms:** camera permission — `NSCameraUsageDescription` in
 `ios/Runner/Info.plist`, `android.permission.CAMERA` in
