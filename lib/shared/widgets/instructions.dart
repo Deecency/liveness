@@ -1,9 +1,11 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:liveness/shared/l10n/liveness_localizations.dart';
 import 'package:liveness/shared/models/config.dart';
 import 'package:liveness/shared/models/enums.dart';
 import 'package:lottie/lottie.dart';
 import 'package:material_ui/material_ui.dart';
+
 // isCompleting isInFinalCapture
 
 class LivenessInstructionWidget extends StatelessWidget {
@@ -30,31 +32,31 @@ class LivenessInstructionWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = config.theme;
+    final words = LivenessLocalizations.of(context, config);
     _StepContent? content;
 
     if (waiting) {
       content = _StepContent(
         icon: CupertinoIcons.hourglass,
         color: config.theme.titleColor,
-        title: 'Preparing Verification',
-        subtitle:
-            'Liveness verification will start automatically in a few seconds…',
+        title: words.preparingTitle,
+        subtitle: words.preparingSubtitle,
         pulse: false,
       );
     } else if (completing) {
       content = _StepContent(
         icon: Icons.check_circle_rounded,
         color: config.successColor,
-        title: 'Verification Successful!',
-        subtitle: 'All gestures verified. Processing your result…',
+        title: words.successTitle,
+        subtitle: words.successSubtitle,
         pulse: false,
       );
     } else if (currentStep != null) {
       content = _StepContent(
         icon: currentStep!.icon,
         color: config.primaryColor,
-        title: currentStep!.displayName,
-        subtitle: currentStep!.instruction,
+        title: words.gestureName(currentStep!),
+        subtitle: words.gestureInstruction(currentStep!),
         pulse: true,
       );
     } else if (capturing) {
@@ -65,8 +67,8 @@ class LivenessInstructionWidget extends StatelessWidget {
             ? Icons.check_circle_outline_rounded
             : Icons.filter_center_focus_rounded,
         color: converging ? config.successColor : config.primaryColor,
-        title: hint.title,
-        subtitle: hint.instruction,
+        title: words.hintTitle(hint),
+        subtitle: words.hintInstruction(hint),
         pulse: !converging,
       );
     }

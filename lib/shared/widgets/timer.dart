@@ -1,5 +1,4 @@
 import 'package:liveness/liveness.dart';
-import 'package:liveness/shared/models/config.dart';
 import 'package:material_ui/material_ui.dart';
 
 class ProgressTimer extends StatelessWidget {
@@ -30,7 +29,10 @@ class ProgressTimer extends StatelessWidget {
           Icon(Icons.timer_rounded, color: color, size: 18),
           const SizedBox(width: 8),
           Text(
-            '${timeRemaining}s remaining',
+            LivenessLocalizations.of(
+              context,
+              config,
+            ).secondsRemaining(timeRemaining),
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w700,

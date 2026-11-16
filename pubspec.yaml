@@ -33,6 +33,8 @@ dependencies:
   cupertino_ui: ^1.1.6
 
 dev_dependencies:
+  # A fake camera for the tests, which have no camera plugin.
+  camera_platform_interface: ^2.12.0
   flutter_test:
     sdk: flutter
   lints: ^5.0.0

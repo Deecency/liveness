@@ -7,6 +7,17 @@
   `camera_android_camerax`, which turns streamed frames into the single
   NV21 plane ML Kit needs when NV21 is requested, as `camera_android` did;
   the frame conversion is unchanged. Apps on 0.10 keep working.
+- **The screen speaks French**, and any language an app supplies. Its words
+  now come from `LivenessLocalizations`, with English and French built in,
+  picked from the app's locale with no setup (English for anything else).
+  Pass `LivenessConfig.localizations` for other wording or languages. See
+  "Language" in the README.
+- `LivenessConfig.title` is now nullable and defaults to the translated
+  title. Code that reads it as a `String` needs `?? ...`.
+- `LivenessState.errorKind` (`noCamera`, `cameraFailed`) says why the camera
+  failed, so a screen can show it translated; `error` is unchanged.
+- The English getters on the enums (`displayName`, `title`, `instruction`)
+  still work and read from the English translation.
 
 ## 1.5.0
 

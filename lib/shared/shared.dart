@@ -1,3 +1,6 @@
+export 'l10n/liveness_localizations.dart';
+export 'l10n/liveness_localizations_en.dart';
+export 'l10n/liveness_localizations_fr.dart';
 export 'models/config.dart';
 export 'models/enums.dart';
 export 'models/liveness_state.dart';

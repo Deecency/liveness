@@ -41,6 +41,39 @@ dependency_overrides:
     path: ../liveness
 ```
 
+## Language
+
+The screen's words are in English and French, and it follows the app's
+locale on its own: with French selected it speaks French, with no setup.
+Any other language falls back to English.
+
+For other wording or another language, pass your own words, for example
+built from the app's own translations. Extend `LivenessLocalizationsEn` to
+change some words and keep the rest, or implement `LivenessLocalizations`
+in full:
+
+```dart
+class AppLivenessWords extends LivenessLocalizationsEn {
+  const AppLivenessWords(this.l10n);
+  final AppLocalizations l10n;
+
+  @override
+  String get title => l10n.verifyYourFace;
+}
+
+FaceLiveness.show(
+  context,
+  config: LivenessConfig(localizations: AppLivenessWords(context.l10n)),
+);
+```
+
+`LivenessConfig.title`, when set, still wins over the translated title. A
+screen of your own (`LivenessController` + `LivenessPreview`) can use
+`LivenessLocalizations.of(context)` for the same words, and
+`LivenessState.errorKind` to show a camera error in the app's language;
+`LivenessState.error` and `LivenessResult.message` stay in English, for
+logs.
+
 ## App setup (required — builds succeed, but the app breaks without it)
 
 Each step below is in the app's own project files, not in this package,

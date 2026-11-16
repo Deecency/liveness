@@ -101,6 +101,7 @@ class LivenessController extends ChangeNotifier
   bool _isDetecting = false;
   DateTime _startTime = DateTime.now();
   String _errorMessage = '';
+  LivenessErrorKind? _errorKind;
   int _faceCount = 0;
 
   // How far into the current gesture the person is, 0–1. See _setProgress.
@@ -205,6 +206,7 @@ class LivenessController extends ChangeNotifier
     timeRemaining: _timeRemaining,
     timeoutSeconds: config.timeoutSeconds,
     error: _errorMessage.isEmpty ? null : _errorMessage,
+    errorKind: _errorKind,
     result: _finalResult,
   );
 
@@ -217,7 +219,7 @@ class LivenessController extends ChangeNotifier
     try {
       final cameras = await availableCameras();
       if (cameras.isEmpty) {
-        _showError('No camera available');
+        _showError('No camera available', LivenessErrorKind.noCamera);
         return;
       }
 
@@ -259,7 +261,10 @@ class LivenessController extends ChangeNotifier
       _update(() => _cameraReady = true);
       _maybeStartLivenessDetection();
     } catch (e) {
-      _showError('Failed to initialize camera: $e');
+      _showError(
+        'Failed to initialize camera: $e',
+        LivenessErrorKind.cameraFailed,
+      );
     }
   }
 
@@ -421,8 +426,11 @@ class LivenessController extends ChangeNotifier
     _timer = _createCountdownTimer();
   }
 
-  void _showError(String message) {
-    _update(() => _errorMessage = message);
+  void _showError(String message, LivenessErrorKind kind) {
+    _update(() {
+      _errorMessage = message;
+      _errorKind = kind;
+    });
 
     Timer(const Duration(seconds: 3), () {
       if (!_disposed) _onFailure(message);

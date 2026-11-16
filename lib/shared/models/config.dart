@@ -1,12 +1,21 @@
 import 'dart:ui';
 
+import 'package:liveness/shared/l10n/liveness_localizations.dart';
 import 'package:liveness/shared/models/enums.dart';
 import 'package:liveness/shared/models/liveness_thresholds.dart';
 import 'package:liveness/shared/theme.dart';
 
 /// Configuration class for liveness detection
 class LivenessConfig {
-  final String title;
+  /// The app bar title. Null shows `LivenessLocalizations.title` in the
+  /// app's language.
+  final String? title;
+
+  /// The screen's words. Null uses the built-in English or French,
+  /// whichever matches the app's locale; set it for other wording or
+  /// another language.
+  final LivenessLocalizations? localizations;
+
   final int timeoutSeconds;
 
   /// The gestures to run, in order — or, when [randomGestureCount] is set, the
@@ -38,7 +47,8 @@ class LivenessConfig {
   final bool rejectMultipleFaces;
 
   const LivenessConfig({
-    this.title = 'Liveness Verification',
+    this.title,
+    this.localizations,
     this.timeoutSeconds = 30,
     this.requiredGestures = const [
       LivenessGesture.mouthOpen,
