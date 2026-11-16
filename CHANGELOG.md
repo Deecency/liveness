@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.0
+
+- **`camera` 0.11 and 0.12 are allowed** (`>=0.10.6 <0.13.0`), so apps on
+  the current camera plugin can use the package. From 0.11, Android uses
+  `camera_android_camerax`, which turns streamed frames into the single
+  NV21 plane ML Kit needs when NV21 is requested, as `camera_android` did;
+  the frame conversion is unchanged. Apps on 0.10 keep working.
+
 ## 1.5.0
 
 - **Needs Flutter 3.47 or later (Dart 3.13).** The package now imports
