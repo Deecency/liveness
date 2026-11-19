@@ -271,6 +271,27 @@ With `rejectMultipleFaces: true`, a frame with more than one face counts
 for nothing and the hint becomes `LivenessCaptureHint.multipleFaces`. It's
 off by default, which keeps the original behaviour.
 
+## Checking the photo
+
+The still a check returns was taken after a steady, well-framed hold, but
+the person can still move or blink as the shutter fires. To check the
+photo itself, or to find where the face is in it, look for its faces:
+
+```dart
+final faces = await LivenessPhotoFaces.find(result.capturedImage!.path);
+if (faces.length != 1) { /* moved out of view, or someone else is in it */ }
+final face = faces.single;
+face.bounds;                          // in the photo's pixels
+face.yaw; face.pitch; face.roll;      // degrees, null if not measured
+face.leftEyeOpen; face.rightEyeOpen;  // 0–1, null if not measured
+```
+
+It runs the same ML Kit detector as the check, so the app needs no ML Kit
+dependency of its own. Positions are in the photo as stored: cameras may
+store it sideways with a tag saying how to turn it, so turn a copy upright
+first (for example with `img.bakeOrientation` from the `image` package) to
+measure the face as the photo is shown.
+
 ## Models
 
 `FaceModel.mobileFaceNet` (about 5 MB, the default) and
