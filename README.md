@@ -292,6 +292,7 @@ store it sideways with a tag saying how to turn it, so turn a copy upright
 first (for example with `img.bakeOrientation` from the `image` package) to
 measure the face as the photo is shown.
 
+## Models
 
 `FaceModel.mobileFaceNet` (about 5 MB, the default) and
 `FaceModel.faceNet` (about 24 MB) are bundled. `FaceModel.faceNet512` is
