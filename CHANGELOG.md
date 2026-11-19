@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.7.0
+
+- **`LivenessPhotoFaces.find(path)`** finds the faces in a photo on disk,
+  such as the still a check took, with the same ML Kit detector the check
+  uses. Each `LivenessPhotoFace` gives where the face is, the head's yaw,
+  pitch and roll, and how likely each eye is open. An app can check the
+  still before using it, or find the face in it, without depending on ML
+  Kit itself. See "Checking the photo" in the README. Nothing else
+  changes.
+
 ## 1.6.0
 
 - **`camera` 0.11 and 0.12 are allowed** (`>=0.10.6 <0.13.0`), so apps on
